@@ -79,24 +79,12 @@ export function joinData(
       const phase = hubspotRow["Phase de cycle de vie ACQUEREURS B2C"] || '';
       const statutLead = hubspotRow["Statut du lead ACQUEREURS"] || '';
       
-      // Normaliser les valeurs pour les vérifications
-      const normalizedPhase = normalizeText(phase);
-      const normalizedStatut = normalizeText(statutLead);
+      // Utiliser la nouvelle logique de classification
+      const label = classifyLead(phase, statutLead);
       
-      // Vérifier si la phase contient R1, R2, ou R3 (exception pour les valeurs vides)
-      const hasRPhase = ["r1", "r2", "r3"].some(rPhase => normalizedPhase.includes(rPhase));
-      
-      // Exclure les leads avec des valeurs vides dans les colonnes HubSpot
-      // SAUF si la phase contient R1, R2, ou R3
-      if (!hasRPhase && (normalizedPhase === "" || normalizedStatut === "")) {
-        continue; // Ignorer ces leads
-      }
-      
-      // Exclure les leads avec ces phases spécifiques
-      const excludedPhases = ["lead", "lead marketing", "lead actif - en cours"];
-      
-      if (excludedPhases.includes(normalizedPhase)) {
-        continue; // Ignorer ces leads
+      // Ignorer les cas où la classification retourne null (cas à ignorer)
+      if (label === null) {
+        continue;
       }
       
       const result: ResultRow = {
@@ -106,7 +94,7 @@ export function joinData(
         sheetStatut: statusValue,
         phase,
         statutLead,
-        label: classifyLead(phase, statutLead)
+        label
       };
       
       results.push(result);
