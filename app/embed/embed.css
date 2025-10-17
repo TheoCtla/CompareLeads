@@ -1,0 +1,76 @@
+/* Styles spécifiques pour l'embed */
+.embed-body {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  overflow-x: hidden;
+}
+
+.embed-container {
+  width: 100%;
+  min-height: 100vh;
+  background: #f9fafb;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+/* Ajustements pour l'embed */
+.embed-container .container {
+  max-width: 100%;
+  padding: 0;
+}
+
+.embed-container .max-w-6xl {
+  max-width: 100%;
+}
+
+/* Réduire les espacements pour l'embed */
+.embed-container .space-y-6 > * + * {
+  margin-top: 1rem;
+}
+
+.embed-container .mb-8 {
+  margin-bottom: 1.5rem;
+}
+
+.embed-container .py-8 {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+/* Ajuster les tailles de police pour l'embed */
+.embed-container h1 {
+  font-size: 1.875rem;
+  line-height: 2.25rem;
+}
+
+.embed-container h2 {
+  font-size: 1.5rem;
+  line-height: 2rem;
+}
+
+/* Optimiser les cartes pour l'embed */
+.embed-container .card {
+  margin-bottom: 1rem;
+}
+
+/* Ajuster les grilles pour l'embed */
+.embed-container .grid-cols-1.lg\\:grid-cols-2 {
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .embed-container {
+    padding: 0.5rem;
+  }
+  
+  .embed-container h1 {
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+  
+  .embed-container h2 {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+  }
+}
