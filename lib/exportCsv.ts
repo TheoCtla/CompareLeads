@@ -5,7 +5,7 @@ export function exportResultsToCsv(results: ResultRow[], filename: string = 'res
   const csvData = results.map(row => ({
     'Identifiant': row.key,
     'Nom': row.nom || '',
-    'Email': row.email || '',
+    'Prénom': row.prenom || '',
     'Statut Sheet': row.sheetStatut || '',
     'Phase de cycle de vie ACQUEREURS B2C': row.phase || '',
     'Statut du lead ACQUEREURS': row.statutLead || '',
@@ -36,7 +36,7 @@ export function generateCsvContent(results: ResultRow[]): string {
   const csvData = results.map(row => ({
     'Identifiant': row.key,
     'Nom': row.nom || '',
-    'Email': row.email || '',
+    'Prénom': row.prenom || '',
     'Statut Sheet': row.sheetStatut || '',
     'Phase de cycle de vie ACQUEREURS B2C': row.phase || '',
     'Statut du lead ACQUEREURS': row.statutLead || '',

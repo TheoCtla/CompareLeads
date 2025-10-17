@@ -12,6 +12,10 @@ export function joinData(
   let totalProcessed = 0;
   let matchedCount = 0;
   let unmatchedCount = 0;
+  const unmatchedEmails: string[] = [];
+  const unmatchedNames: string[] = [];
+  const unmatchedPrenoms: string[] = [];
+  
   
   // Construire un Map côté HubSpot par clé normalisée (garder tous les enregistrements)
   const hubspotMap = new Map<string, HubSpotRow[]>();
@@ -62,12 +66,26 @@ export function joinData(
     const key = normalizeKey(sheetRow[options.sheetKey]);
     if (!key) {
       unmatchedCount++;
+      // Capturer les détails des leads sans clé valide
+      const email = sheetRow.email || sheetRow.Email || sheetRow.EMAIL || '';
+      const nom = sheetRow.nom || sheetRow.name || sheetRow.Nom || sheetRow.Name || '';
+      const prenom = sheetRow['Prénom'] || sheetRow.prenom || sheetRow.Prenom || sheetRow.PRENOM || sheetRow.firstname || sheetRow.firstName || sheetRow.FirstName || sheetRow.first_name || sheetRow.First_Name || '';
+      if (email) unmatchedEmails.push(email);
+      if (nom) unmatchedNames.push(nom);
+      if (prenom) unmatchedPrenoms.push(prenom);
       continue;
     }
     
     const hubspotRows = hubspotMap.get(key);
     if (!hubspotRows || hubspotRows.length === 0) {
       unmatchedCount++;
+      // Capturer les détails des leads sans correspondance dans HubSpot
+      const email = sheetRow.email || sheetRow.Email || sheetRow.EMAIL || '';
+      const nom = sheetRow.nom || sheetRow.name || sheetRow.Nom || sheetRow.Name || '';
+      const prenom = sheetRow['Prénom'] || sheetRow.prenom || sheetRow.Prenom || sheetRow.PRENOM || sheetRow.firstname || sheetRow.firstName || sheetRow.FirstName || sheetRow.first_name || sheetRow.First_Name || '';
+      if (email) unmatchedEmails.push(email);
+      if (nom) unmatchedNames.push(nom);
+      if (prenom) unmatchedPrenoms.push(prenom);
       continue;
     }
     
@@ -90,7 +108,7 @@ export function joinData(
       const result: ResultRow = {
         key,
         nom: sheetRow.nom || sheetRow.name || sheetRow.Nom || sheetRow.Name || '',
-        email: sheetRow.email || sheetRow.Email || sheetRow.EMAIL || '',
+        prenom: sheetRow['Prénom'] || sheetRow.prenom || sheetRow.Prenom || sheetRow.PRENOM || sheetRow.firstname || sheetRow.firstName || sheetRow.FirstName || sheetRow.first_name || sheetRow.First_Name || '',
         sheetStatut: statusValue,
         phase,
         statutLead,
@@ -111,6 +129,11 @@ export function joinData(
       hubspot: Array.from(hubspotDuplicates.values()).reduce((sum, count) => sum + count, 0),
       sheetEmails: sheetDuplicateEmails,
       hubspotEmails: hubspotDuplicateEmails
+    },
+    unmatchedDetails: {
+      emails: unmatchedEmails,
+      names: unmatchedNames,
+      prenoms: unmatchedPrenoms
     }
   };
 }

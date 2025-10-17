@@ -27,6 +27,7 @@ export function ResultsTable({ results }: ResultsTableProps) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [showDuplicates, setShowDuplicates] = React.useState(false);
+  const [showUnmatched, setShowUnmatched] = React.useState(false);
 
   const columns: ColumnDef<ResultRow>[] = [
     {
@@ -37,7 +38,7 @@ export function ResultsTable({ results }: ResultsTableProps) {
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
-            Identifiant
+            Email
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         );
@@ -62,8 +63,8 @@ export function ResultsTable({ results }: ResultsTableProps) {
       header: 'Nom',
     },
     {
-      accessorKey: 'email',
-      header: 'Email',
+      accessorKey: 'prenom',
+      header: 'Prénom',
     },
     {
       accessorKey: 'phase',
@@ -171,9 +172,15 @@ export function ResultsTable({ results }: ResultsTableProps) {
               <div className="font-medium text-green-900">Correspondances</div>
               <div className="text-2xl font-bold text-green-600">{results.matchedCount}</div>
             </div>
-            <div className="bg-yellow-50 p-3 rounded-lg">
+            <div 
+              className="bg-yellow-50 p-3 rounded-lg cursor-pointer hover:bg-yellow-100 transition-colors"
+              onClick={() => setShowUnmatched(!showUnmatched)}
+            >
               <div className="font-medium text-yellow-900">Sans correspondance</div>
               <div className="text-2xl font-bold text-yellow-600">{results.unmatchedCount}</div>
+              <div className="text-xs text-yellow-600 mt-1">
+                Cliquez pour {showUnmatched ? 'masquer' : 'afficher'} les détails
+              </div>
             </div>
             <div 
               className="bg-purple-50 p-3 rounded-lg cursor-pointer hover:bg-purple-100 transition-colors"
@@ -220,6 +227,57 @@ export function ResultsTable({ results }: ResultsTableProps) {
                     </div>
                   ) : (
                     <div className="text-purple-700">Aucun doublon détecté</div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Détails des leads sans correspondances */}
+          {showUnmatched && (
+            <div className="bg-yellow-50 p-4 rounded-lg">
+              <h3 className="font-medium text-yellow-900 mb-3">Détails des leads sans correspondances</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div>
+                  <div className="font-medium text-yellow-800 mb-2">Emails ({results.unmatchedDetails.emails.length})</div>
+                  {results.unmatchedDetails.emails.length > 0 ? (
+                    <div className="space-y-1">
+                      {results.unmatchedDetails.emails.map((email, index) => (
+                        <div key={index} className="text-yellow-700 bg-yellow-100 px-2 py-1 rounded text-xs">
+                          {email}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-yellow-700">Aucun email disponible</div>
+                  )}
+                </div>
+                <div>
+                  <div className="font-medium text-yellow-800 mb-2">Noms ({results.unmatchedDetails.names.length})</div>
+                  {results.unmatchedDetails.names.length > 0 ? (
+                    <div className="space-y-1">
+                      {results.unmatchedDetails.names.map((name, index) => (
+                        <div key={index} className="text-yellow-700 bg-yellow-100 px-2 py-1 rounded text-xs">
+                          {name}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-yellow-700">Aucun nom disponible</div>
+                  )}
+                </div>
+                <div>
+                  <div className="font-medium text-yellow-800 mb-2">Prénoms ({results.unmatchedDetails.prenoms.length})</div>
+                  {results.unmatchedDetails.prenoms.length > 0 ? (
+                    <div className="space-y-1">
+                      {results.unmatchedDetails.prenoms.map((prenom, index) => (
+                        <div key={index} className="text-yellow-700 bg-yellow-100 px-2 py-1 rounded text-xs">
+                          {prenom}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-yellow-700">Aucun prénom disponible</div>
                   )}
                 </div>
               </div>

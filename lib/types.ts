@@ -10,7 +10,7 @@ export type CompareOptions = {
 export type ResultRow = {
   key: string;
   nom?: string;
-  email?: string;
+  prenom?: string;
   sheetStatut?: string; // vide ici
   phase?: string;       // HubSpot: "Phase de cycle de vie ACQUEREURS B2C"
   statutLead?: string;  // HubSpot: "Statut du lead ACQUEREURS"
@@ -39,5 +39,10 @@ export type JoinResult = {
     hubspot: number;
     sheetEmails: string[];
     hubspotEmails: string[];
+  };
+  unmatchedDetails: {
+    emails: string[];
+    names: string[];
+    prenoms: string[];
   };
 };
