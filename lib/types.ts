@@ -7,14 +7,17 @@ export type CompareOptions = {
   sheetStatusColumn: string; // ex "statut" (par défaut), modifiable
 };
 
+export type PropositionValue = "Oui" | "Non" | "Variable" | "On attend";
+
 export type ResultRow = {
   key: string;
   nom?: string;
   prenom?: string;
   sheetStatut?: string; // vide ici
-  phase?: string;       // HubSpot: "Phase de cycle de vie ACQUEREURS B2C"
-  statutLead?: string;  // HubSpot: "Statut du lead ACQUEREURS"
-  label: "Qualifié" | "Non qualifié";
+  phase?: string;       // HubSpot: "Phase de la transaction"
+  statutLead?: string;  // HubSpot: (non utilisé pour l'instant)
+  label: "Qualifié" | "Non qualifié" | "Lead marketing";
+  proposition: PropositionValue;
 };
 
 export type CsvData = {
@@ -39,6 +42,10 @@ export type JoinResult = {
     hubspot: number;
     sheetEmails: string[];
     hubspotEmails: string[];
+    sheetNames: string[];
+    hubspotNames: string[];
+    sheetPrenoms: string[];
+    hubspotPrenoms: string[];
   };
   unmatchedDetails: {
     emails: string[];

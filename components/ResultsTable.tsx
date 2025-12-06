@@ -68,29 +68,10 @@ export function ResultsTable({ results }: ResultsTableProps) {
     },
     {
       accessorKey: 'phase',
-      header: () => (
-        <div className="text-center">
-          <div>Phase de cycle de vie</div>
-          <div>ACQUEREURS B2C</div>
-        </div>
-      ),
+      header: 'Phase de la transaction',
       cell: ({ row }) => (
-        <div className="max-w-[180px] truncate text-xs" title={row.getValue('phase')}>
+        <div className="max-w-[200px] truncate text-xs" title={row.getValue('phase')}>
           {row.getValue('phase')}
-        </div>
-      ),
-    },
-    {
-      accessorKey: 'statutLead',
-      header: () => (
-        <div className="text-center">
-          <div>Statut du lead</div>
-          <div>ACQUEREURS</div>
-        </div>
-      ),
-      cell: ({ row }) => (
-        <div className="max-w-[180px] truncate text-xs" title={row.getValue('statutLead')}>
-          {row.getValue('statutLead')}
         </div>
       ),
     },
@@ -102,20 +83,64 @@ export function ResultsTable({ results }: ResultsTableProps) {
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
-            Label
+            Statut
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         );
       },
       cell: ({ row }) => {
         const label = row.getValue('label') as string;
+        const getColorClass = () => {
+          switch (label) {
+            case 'Qualifié':
+              return 'bg-green-100 text-green-800';
+            case 'Non qualifié':
+              return 'bg-red-100 text-red-800';
+            case 'Lead marketing':
+              return 'bg-cyan-100 text-cyan-800';
+            default:
+              return 'bg-gray-100 text-gray-800';
+          }
+        };
         return (
-          <span className={`px-1.5 py-0.5 rounded-full text-xs font-medium ${
-            label === 'Qualifié' 
-              ? 'bg-green-100 text-green-800' 
-              : 'bg-red-100 text-red-800'
-          }`}>
+          <span className={`px-1.5 py-0.5 rounded-full text-xs font-medium ${getColorClass()}`}>
             {label}
+          </span>
+        );
+      },
+    },
+    {
+      accessorKey: 'proposition',
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Proposition
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        );
+      },
+      cell: ({ row }) => {
+        const proposition = row.getValue('proposition') as string;
+        const getColorClass = () => {
+          switch (proposition) {
+            case 'Oui':
+              return 'bg-green-100 text-green-800';
+            case 'Non':
+              return 'bg-red-100 text-red-800';
+            case 'Variable':
+              return 'bg-yellow-100 text-yellow-800';
+            case 'On attend':
+              return 'bg-orange-100 text-orange-800';
+            default:
+              return 'bg-gray-100 text-gray-800';
+          }
+        };
+        return (
+          <span className={`px-1.5 py-0.5 rounded-full text-xs font-medium ${getColorClass()}`}>
+            {proposition}
           </span>
         );
       },
@@ -143,6 +168,7 @@ export function ResultsTable({ results }: ResultsTableProps) {
 
   const qualifiedCount = results.results.filter(r => r.label === 'Qualifié').length;
   const unqualifiedCount = results.results.filter(r => r.label === 'Non qualifié').length;
+  const leadMarketingCount = results.results.filter(r => r.label === 'Lead marketing').length;
 
   return (
     <Card>
@@ -151,7 +177,7 @@ export function ResultsTable({ results }: ResultsTableProps) {
           <div>
             <CardTitle>Résultats de la comparaison</CardTitle>
             <p className="text-sm text-gray-600 mt-1">
-              {results.results.length} leads trouvés • {qualifiedCount} qualifiés • {unqualifiedCount} non qualifiés
+              {results.results.length} leads trouvés • {qualifiedCount} qualifiés • {unqualifiedCount} non qualifiés • {leadMarketingCount} lead marketing
             </p>
           </div>
           <Button onClick={handleExport} className="flex items-center gap-2">
@@ -205,9 +231,23 @@ export function ResultsTable({ results }: ResultsTableProps) {
                   <div className="font-medium text-purple-800 mb-2">Doublons Sheet ({results.duplicates.sheet})</div>
                   {results.duplicates.sheetEmails.length > 0 ? (
                     <div className="space-y-1">
+                      {/* En-têtes */}
+                      <div className="text-purple-600 font-medium text-xs grid grid-cols-3 gap-2 px-2 py-1">
+                        <div>Email</div>
+                        <div>Nom</div>
+                        <div>Prénom</div>
+                      </div>
                       {results.duplicates.sheetEmails.map((email, index) => (
-                        <div key={index} className="text-purple-700 bg-purple-100 px-2 py-1 rounded text-xs">
-                          {email}
+                        <div key={index} className="text-purple-700 bg-purple-100 px-2 py-1 rounded text-xs grid grid-cols-3 gap-2">
+                          <div className="truncate" title={email}>
+                            {email}
+                          </div>
+                          <div className="truncate" title={results.duplicates.sheetNames[index] || ''}>
+                            {results.duplicates.sheetNames[index] || ''}
+                          </div>
+                          <div className="truncate" title={results.duplicates.sheetPrenoms[index] || ''}>
+                            {results.duplicates.sheetPrenoms[index] || ''}
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -219,9 +259,23 @@ export function ResultsTable({ results }: ResultsTableProps) {
                   <div className="font-medium text-purple-800 mb-2">Doublons HubSpot ({results.duplicates.hubspot})</div>
                   {results.duplicates.hubspotEmails.length > 0 ? (
                     <div className="space-y-1">
+                      {/* En-têtes */}
+                      <div className="text-purple-600 font-medium text-xs grid grid-cols-3 gap-2 px-2 py-1">
+                        <div>Email</div>
+                        <div>Nom</div>
+                        <div>Prénom</div>
+                      </div>
                       {results.duplicates.hubspotEmails.map((email, index) => (
-                        <div key={index} className="text-purple-700 bg-purple-100 px-2 py-1 rounded text-xs">
-                          {email}
+                        <div key={index} className="text-purple-700 bg-purple-100 px-2 py-1 rounded text-xs grid grid-cols-3 gap-2">
+                          <div className="truncate" title={email}>
+                            {email}
+                          </div>
+                          <div className="truncate" title={results.duplicates.hubspotNames[index] || ''}>
+                            {results.duplicates.hubspotNames[index] || ''}
+                          </div>
+                          <div className="truncate" title={results.duplicates.hubspotPrenoms[index] || ''}>
+                            {results.duplicates.hubspotPrenoms[index] || ''}
+                          </div>
                         </div>
                       ))}
                     </div>

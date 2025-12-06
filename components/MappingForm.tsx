@@ -42,8 +42,9 @@ export function MappingForm({ sheetData, hubspotData, onCompare, isProcessing, h
       const sheetEmailColumn = validSheetHeaders.find(col => 
         col.toLowerCase().includes('email') || col.toLowerCase().includes('mail')
       );
+      // HubSpot: chercher "Nom de la transaction" (insensible à la casse)
       const hubspotEmailColumn = validHubspotHeaders.find(col => 
-        col.toLowerCase().includes('email') || col.toLowerCase().includes('mail')
+        col.toLowerCase().includes('nom de la transaction')
       );
       
       setOptions({
@@ -67,17 +68,13 @@ export function MappingForm({ sheetData, hubspotData, onCompare, isProcessing, h
       newErrors.push('Veuillez sélectionner une colonne de statut pour le fichier Sheet');
     }
 
-    // Vérifier les colonnes HubSpot requises
+    // Vérifier les colonnes HubSpot requises (insensible à la casse)
     if (hubspotData) {
-      const requiredColumns = [
-        "Phase de cycle de vie ACQUEREURS B2C",
-        "Statut du lead ACQUEREURS"
-      ];
-      const missingColumns = requiredColumns.filter(col => 
-        !hubspotData.headers.includes(col)
+      const hasPhaseColumn = hubspotData.headers.some(header => 
+        header.toLowerCase().includes('phase de la transaction')
       );
-      if (missingColumns.length > 0) {
-        newErrors.push(`Colonnes HubSpot manquantes: ${missingColumns.join(', ')}`);
+      if (!hasPhaseColumn) {
+        newErrors.push('Colonne HubSpot manquante: Phase de la transaction');
       }
     }
 

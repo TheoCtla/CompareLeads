@@ -3,13 +3,12 @@ import { ResultRow } from './types';
 
 export function exportResultsToCsv(results: ResultRow[], filename: string = 'resultats-leads.csv'): void {
   const csvData = results.map(row => ({
-    'Identifiant': row.key,
+    'Email': row.key,
     'Nom': row.nom || '',
     'Prénom': row.prenom || '',
-    'Statut Sheet': row.sheetStatut || '',
-    'Phase de cycle de vie ACQUEREURS B2C': row.phase || '',
-    'Statut du lead ACQUEREURS': row.statutLead || '',
-    'Label': row.label
+    'Phase de la transaction': row.phase || '',
+    'Statut': row.label,
+    'Proposition': row.proposition
   }));
   
   const csv = Papa.unparse(csvData, {
@@ -34,13 +33,12 @@ export function exportResultsToCsv(results: ResultRow[], filename: string = 'res
 
 export function generateCsvContent(results: ResultRow[]): string {
   const csvData = results.map(row => ({
-    'Identifiant': row.key,
+    'Email': row.key,
     'Nom': row.nom || '',
     'Prénom': row.prenom || '',
-    'Statut Sheet': row.sheetStatut || '',
-    'Phase de cycle de vie ACQUEREURS B2C': row.phase || '',
-    'Statut du lead ACQUEREURS': row.statutLead || '',
-    'Label': row.label
+    'Phase de la transaction': row.phase || '',
+    'Statut': row.label,
+    'Proposition': row.proposition
   }));
   
   return Papa.unparse(csvData, {

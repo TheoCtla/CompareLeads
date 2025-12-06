@@ -1,7 +1,6 @@
 import { SheetRow, HubSpotRow, ResultRow, CompareOptions, JoinResult } from './types';
-import { normalizeKey, isEmpty, normalizeText } from './normalize';
-import { classifyLead } from './classify';
-import { isEmptySheetStatus, normalizeForCompare } from './sheetStatusUtils';
+import { normalizeKey, extractEmail } from './normalize';
+import { classifyLead, classifyProposition } from './classify';
 
 export function joinData(
   sheetData: SheetRow[],
@@ -21,15 +20,24 @@ export function joinData(
   const hubspotMap = new Map<string, HubSpotRow[]>();
   const hubspotDuplicates = new Map<string, number>();
   const hubspotDuplicateEmails: string[] = [];
+  const hubspotDuplicateNames: string[] = [];
+  const hubspotDuplicatePrenoms: string[] = [];
   
   for (const row of hubspotData) {
-    const key = normalizeKey(row[options.hubspotKey]);
+    // Extraire l'email de la colonne HubSpot (ex: "Nom - email@test.com - email@test.com" → "email@test.com")
+    const rawValue = row[options.hubspotKey];
+    const key = extractEmail(rawValue) || normalizeKey(rawValue);
     if (key) {
       if (hubspotMap.has(key)) {
         hubspotMap.get(key)!.push(row);
         hubspotDuplicates.set(key, (hubspotDuplicates.get(key) || 0) + 1);
         if (!hubspotDuplicateEmails.includes(key)) {
           hubspotDuplicateEmails.push(key);
+          // Capturer nom et prénom pour les doublons HubSpot
+          const nom = row.nom || row.name || row.Nom || row.Name || '';
+          const prenom = row['Prénom'] || row.prenom || row.Prenom || row.PRENOM || row.firstname || row.firstName || row.FirstName || row.first_name || row.First_Name || '';
+          if (nom) hubspotDuplicateNames.push(nom);
+          if (prenom) hubspotDuplicatePrenoms.push(prenom);
         }
       } else {
         hubspotMap.set(key, [row]);
@@ -40,28 +48,30 @@ export function joinData(
   // Construire un Map pour détecter les doublons côté Sheet
   const sheetKeys = new Map<string, number>();
   const sheetDuplicateEmails: string[] = [];
+  const sheetDuplicateNames: string[] = [];
+  const sheetDuplicatePrenoms: string[] = [];
   for (const row of sheetData) {
     const key = normalizeKey(row[options.sheetKey]);
     if (key) {
       if (sheetKeys.has(key)) {
         if (!sheetDuplicateEmails.includes(key)) {
           sheetDuplicateEmails.push(key);
+          // Capturer nom et prénom pour les doublons Sheet
+          const nom = row.nom || row.name || row.Nom || row.Name || '';
+          const prenom = row['Prénom'] || row.prenom || row.Prenom || row.PRENOM || row.firstname || row.firstName || row.FirstName || row.first_name || row.First_Name || '';
+          if (nom) sheetDuplicateNames.push(nom);
+          if (prenom) sheetDuplicatePrenoms.push(prenom);
         }
       }
       sheetKeys.set(key, (sheetKeys.get(key) || 0) + 1);
     }
   }
   
-  // Itérer le Sheet, ne retenir que les lignes avec statut vide
+  // Itérer tous les clients du Sheet
   for (const sheetRow of sheetData) {
     totalProcessed++;
     
-    const statusValue = sheetRow[options.sheetStatusColumn];
-    
-    // Utiliser la nouvelle logique de détection de statut vide
-    if (!isEmptySheetStatus(statusValue)) {
-      continue;
-    }
+    const statusValue = sheetRow[options.sheetStatusColumn] || '';
     
     const key = normalizeKey(sheetRow[options.sheetKey]);
     if (!key) {
@@ -93,17 +103,23 @@ export function joinData(
     for (const hubspotRow of hubspotRows) {
       matchedCount++;
       
-      // Extraire les données pour le résultat
-      const phase = hubspotRow["Phase de cycle de vie ACQUEREURS B2C"] || '';
-      const statutLead = hubspotRow["Statut du lead ACQUEREURS"] || '';
+      // Extraire "Phase de la transaction" (insensible à la casse)
+      const phaseKey = Object.keys(hubspotRow).find(k => 
+        k.toLowerCase().includes('phase de la transaction')
+      );
+      const phase = phaseKey ? hubspotRow[phaseKey] : '';
+      const statutLead = ''; // Non utilisé pour l'instant
       
       // Utiliser la nouvelle logique de classification
-      const label = classifyLead(phase, statutLead);
+      const label = classifyLead(phase);
       
       // Ignorer les cas où la classification retourne null (cas à ignorer)
       if (label === null) {
         continue;
       }
+      
+      // Classifier la proposition
+      const proposition = classifyProposition(phase);
       
       const result: ResultRow = {
         key,
@@ -112,7 +128,8 @@ export function joinData(
         sheetStatut: statusValue,
         phase,
         statutLead,
-        label
+        label,
+        proposition
       };
       
       results.push(result);
@@ -128,7 +145,11 @@ export function joinData(
       sheet: Array.from(sheetKeys.values()).filter(count => count > 1).length,
       hubspot: Array.from(hubspotDuplicates.values()).reduce((sum, count) => sum + count, 0),
       sheetEmails: sheetDuplicateEmails,
-      hubspotEmails: hubspotDuplicateEmails
+      hubspotEmails: hubspotDuplicateEmails,
+      sheetNames: sheetDuplicateNames,
+      hubspotNames: hubspotDuplicateNames,
+      sheetPrenoms: sheetDuplicatePrenoms,
+      hubspotPrenoms: hubspotDuplicatePrenoms
     },
     unmatchedDetails: {
       emails: unmatchedEmails,
