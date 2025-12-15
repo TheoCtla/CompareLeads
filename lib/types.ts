@@ -16,7 +16,7 @@ export type ResultRow = {
   sheetStatut?: string; // vide ici
   phase?: string;       // HubSpot: "Phase de la transaction"
   statutLead?: string;  // HubSpot: (non utilisé pour l'instant)
-  label: "Qualifié" | "Non qualifié" | "Lead marketing";
+  label: "Qualifié" | "Non qualifié" | "Lead marketing" | "";
   proposition: PropositionValue;
 };
 

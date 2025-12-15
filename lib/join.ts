@@ -14,15 +14,15 @@ export function joinData(
   const unmatchedEmails: string[] = [];
   const unmatchedNames: string[] = [];
   const unmatchedPrenoms: string[] = [];
-  
-  
+
+
   // Construire un Map côté HubSpot par clé normalisée (garder tous les enregistrements)
   const hubspotMap = new Map<string, HubSpotRow[]>();
   const hubspotDuplicates = new Map<string, number>();
   const hubspotDuplicateEmails: string[] = [];
   const hubspotDuplicateNames: string[] = [];
   const hubspotDuplicatePrenoms: string[] = [];
-  
+
   for (const row of hubspotData) {
     // Extraire l'email de la colonne HubSpot (ex: "Nom - email@test.com - email@test.com" → "email@test.com")
     const rawValue = row[options.hubspotKey];
@@ -44,7 +44,7 @@ export function joinData(
       }
     }
   }
-  
+
   // Construire un Map pour détecter les doublons côté Sheet
   const sheetKeys = new Map<string, number>();
   const sheetDuplicateEmails: string[] = [];
@@ -66,13 +66,13 @@ export function joinData(
       sheetKeys.set(key, (sheetKeys.get(key) || 0) + 1);
     }
   }
-  
+
   // Itérer tous les clients du Sheet
   for (const sheetRow of sheetData) {
     totalProcessed++;
-    
+
     const statusValue = sheetRow[options.sheetStatusColumn] || '';
-    
+
     const key = normalizeKey(sheetRow[options.sheetKey]);
     if (!key) {
       unmatchedCount++;
@@ -85,7 +85,7 @@ export function joinData(
       if (prenom) unmatchedPrenoms.push(prenom);
       continue;
     }
-    
+
     const hubspotRows = hubspotMap.get(key);
     if (!hubspotRows || hubspotRows.length === 0) {
       unmatchedCount++;
@@ -98,29 +98,26 @@ export function joinData(
       if (prenom) unmatchedPrenoms.push(prenom);
       continue;
     }
-    
+
     // Traiter tous les enregistrements HubSpot (y compris les doublons)
     for (const hubspotRow of hubspotRows) {
       matchedCount++;
-      
+
       // Extraire "Phase de la transaction" (insensible à la casse)
-      const phaseKey = Object.keys(hubspotRow).find(k => 
+      const phaseKey = Object.keys(hubspotRow).find(k =>
         k.toLowerCase().includes('phase de la transaction')
       );
       const phase = phaseKey ? hubspotRow[phaseKey] : '';
       const statutLead = ''; // Non utilisé pour l'instant
-      
+
       // Utiliser la nouvelle logique de classification
-      const label = classifyLead(phase);
-      
-      // Ignorer les cas où la classification retourne null (cas à ignorer)
-      if (label === null) {
-        continue;
-      }
-      
+      const classificationResult = classifyLead(phase);
+      // Si la classification retourne null, on met une chaîne vide (pas de nouvelle qualification)
+      const label = classificationResult === null ? "" : classificationResult;
+
       // Classifier la proposition
       const proposition = classifyProposition(phase);
-      
+
       const result: ResultRow = {
         key,
         nom: sheetRow.nom || sheetRow.name || sheetRow.Nom || sheetRow.Name || '',
@@ -131,11 +128,11 @@ export function joinData(
         label,
         proposition
       };
-      
+
       results.push(result);
     }
   }
-  
+
   return {
     results,
     totalProcessed,
