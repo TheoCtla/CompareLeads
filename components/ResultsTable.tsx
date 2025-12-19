@@ -17,7 +17,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { ResultRow, JoinResult } from '@/lib/types';
 import { exportResultsToCsv } from '@/lib/exportCsv';
-import { ArrowUpDown, Download, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowUpDown, Download, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 
 interface ResultsTableProps {
   results: JoinResult;
@@ -406,6 +406,15 @@ export function ResultsTable({ results }: ResultsTableProps) {
               <Button
                 variant="outline"
                 size="sm"
+                onClick={() => table.setPageIndex(0)}
+                disabled={!table.getCanPreviousPage()}
+              >
+                <ChevronsLeft className="h-4 w-4" />
+                Première
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => table.previousPage()}
                 disabled={!table.getCanPreviousPage()}
               >
@@ -420,6 +429,15 @@ export function ResultsTable({ results }: ResultsTableProps) {
               >
                 Suivant
                 <ChevronRight className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                disabled={!table.getCanNextPage()}
+              >
+                Dernière
+                <ChevronsRight className="h-4 w-4" />
               </Button>
             </div>
           </div>
