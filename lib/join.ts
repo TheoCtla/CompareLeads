@@ -72,17 +72,39 @@ export function joinData(
     totalProcessed++;
 
     const statusValue = sheetRow[options.sheetStatusColumn] || '';
+    const email = sheetRow.email || sheetRow.Email || sheetRow.EMAIL || '';
+    const nom = sheetRow.nom || sheetRow.name || sheetRow.Nom || sheetRow.Name || '';
+    const prenom =
+      sheetRow['Prénom'] ||
+      sheetRow.prenom ||
+      sheetRow.Prenom ||
+      sheetRow.PRENOM ||
+      sheetRow.firstname ||
+      sheetRow.firstName ||
+      sheetRow.FirstName ||
+      sheetRow.first_name ||
+      sheetRow.First_Name ||
+      '';
 
     const key = normalizeKey(sheetRow[options.sheetKey]);
     if (!key) {
       unmatchedCount++;
       // Capturer les détails des leads sans clé valide
-      const email = sheetRow.email || sheetRow.Email || sheetRow.EMAIL || '';
-      const nom = sheetRow.nom || sheetRow.name || sheetRow.Nom || sheetRow.Name || '';
-      const prenom = sheetRow['Prénom'] || sheetRow.prenom || sheetRow.Prenom || sheetRow.PRENOM || sheetRow.firstname || sheetRow.firstName || sheetRow.FirstName || sheetRow.first_name || sheetRow.First_Name || '';
       if (email) unmatchedEmails.push(email);
       if (nom) unmatchedNames.push(nom);
       if (prenom) unmatchedPrenoms.push(prenom);
+
+      // Ajouter tout de même une ligne de résultat pour conserver l'alignement avec le Sheet
+      results.push({
+        key: '',
+        nom,
+        prenom,
+        sheetStatut: statusValue,
+        phase: '',
+        statutLead: '',
+        label: '',
+        proposition: 'On attend'
+      });
       continue;
     }
 
@@ -90,9 +112,6 @@ export function joinData(
     if (!hubspotRows || hubspotRows.length === 0) {
       unmatchedCount++;
       // Capturer les détails des leads sans correspondance dans HubSpot
-      const email = sheetRow.email || sheetRow.Email || sheetRow.EMAIL || '';
-      const nom = sheetRow.nom || sheetRow.name || sheetRow.Nom || sheetRow.Name || '';
-      const prenom = sheetRow['Prénom'] || sheetRow.prenom || sheetRow.Prenom || sheetRow.PRENOM || sheetRow.firstname || sheetRow.firstName || sheetRow.FirstName || sheetRow.first_name || sheetRow.First_Name || '';
       if (email) unmatchedEmails.push(email);
       if (nom) unmatchedNames.push(nom);
       if (prenom) unmatchedPrenoms.push(prenom);
@@ -109,11 +128,13 @@ export function joinData(
         proposition: 'On attend'  // Valeur par défaut
       });
       continue;
-    }
+    } else {
+      // Il existe une ou plusieurs lignes HubSpot pour cette clé.
+      // On considère que la plus "récente" est la dernière dans l'export HubSpot.
+      const matchesForThisRow = hubspotRows.length;
+      matchedCount += matchesForThisRow;
 
-    // Traiter tous les enregistrements HubSpot (y compris les doublons)
-    for (const hubspotRow of hubspotRows) {
-      matchedCount++;
+      const hubspotRow = hubspotRows[hubspotRows.length - 1];
 
       // Extraire "Phase de la transaction" (insensible à la casse)
       const phaseKey = Object.keys(hubspotRow).find(k =>
@@ -125,19 +146,15 @@ export function joinData(
       // Utiliser la nouvelle logique de classification
       const classificationResult = classifyLead(phase);
       // Si la classification retourne null, on met une chaîne vide (pas de nouvelle qualification)
-      const label = classificationResult === null ? "" : classificationResult;
+      const label = classificationResult === null ? '' : classificationResult;
 
       // Classifier la proposition
       const proposition = classifyProposition(phase);
 
-      // Extraire nom et prénom pour ce résultat
-      const resultNom = sheetRow.nom || sheetRow.name || sheetRow.Nom || sheetRow.Name || '';
-      const resultPrenom = sheetRow['Prénom'] || sheetRow.prenom || sheetRow.Prenom || sheetRow.PRENOM || sheetRow.firstname || sheetRow.firstName || sheetRow.FirstName || sheetRow.first_name || sheetRow.First_Name || '';
-
       const result: ResultRow = {
         key,
-        nom: resultNom,
-        prenom: resultPrenom,
+        nom,
+        prenom,
         sheetStatut: statusValue,
         phase,
         statutLead,
