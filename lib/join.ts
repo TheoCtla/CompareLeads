@@ -15,10 +15,6 @@ export function joinData(
   const unmatchedNames: string[] = [];
   const unmatchedPrenoms: string[] = [];
 
-  // Set pour tracker les combinaisons (email+nom+prénom) déjà vues
-  // On affiche une ligne sauf si email, nom ET prénom sont TOUS identiques
-  const seenCombinations = new Set<string>();
-
 
   // Construire un Map côté HubSpot par clé normalisée (garder tous les enregistrements)
   const hubspotMap = new Map<string, HubSpotRow[]>();
@@ -101,22 +97,17 @@ export function joinData(
       if (nom) unmatchedNames.push(nom);
       if (prenom) unmatchedPrenoms.push(prenom);
 
-      // Ajouter quand même le lead au résultat avec des champs HubSpot vides
-      // Vérifier les doublons (email + nom + prénom identiques)
-      const combinationKey = `${key}|${normalizeKey(nom)}|${normalizeKey(prenom)}`;
-      if (!seenCombinations.has(combinationKey)) {
-        seenCombinations.add(combinationKey);
-        results.push({
-          key,
-          nom,
-          prenom,
-          sheetStatut: statusValue,
-          phase: '',           // Pas de correspondance HubSpot
-          statutLead: '',
-          label: '',           // Pas de classification possible
-          proposition: 'On attend'  // Valeur par défaut
-        });
-      }
+      // Ajouter systématiquement le lead au résultat avec des champs HubSpot vides
+      results.push({
+        key,
+        nom,
+        prenom,
+        sheetStatut: statusValue,
+        phase: '',           // Pas de correspondance HubSpot
+        statutLead: '',
+        label: '',           // Pas de classification possible
+        proposition: 'On attend'  // Valeur par défaut
+      });
       continue;
     }
 
@@ -142,16 +133,6 @@ export function joinData(
       // Extraire nom et prénom pour ce résultat
       const resultNom = sheetRow.nom || sheetRow.name || sheetRow.Nom || sheetRow.Name || '';
       const resultPrenom = sheetRow['Prénom'] || sheetRow.prenom || sheetRow.Prenom || sheetRow.PRENOM || sheetRow.firstname || sheetRow.firstName || sheetRow.FirstName || sheetRow.first_name || sheetRow.First_Name || '';
-
-      // Créer une clé de combinaison pour détecter les vrais doublons
-      // On skip seulement si email, nom ET prénom sont TOUS identiques
-      const combinationKey = `${key}|${normalizeKey(resultNom)}|${normalizeKey(resultPrenom)}`;
-
-      if (seenCombinations.has(combinationKey)) {
-        // Doublon exact (email + nom + prénom identiques), on skip
-        continue;
-      }
-      seenCombinations.add(combinationKey);
 
       const result: ResultRow = {
         key,
